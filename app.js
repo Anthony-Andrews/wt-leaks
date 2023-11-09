@@ -1,17 +1,33 @@
-import lodashThrottle from "https://cdn.skypack.dev/lodash.throttle@4.1.1";
+import gsap from 'gsap'
+import ScrollTrigger from 'gsap/ScrollTrigger'
+import Draggable from 'gsap/Draggable'
 
-const sections = gsap.utils.toArray('section')
-const track = document.querySelector('[data-draggable]')
+gsap.registerPlugin(ScrollTrigger, Draggable)
+
 const navLinks = gsap.utils.toArray('[data-link]')
-const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
 
 const lastItemWidth = () => navLinks[navLinks.length - 1].offsetWidth
 
-const getUseableHeight = () => document.documentElement.offsetHeight - window.innerHeight
+const track = document.querySelector('[data-draggable]')
+
+const tl = gsap.timeline()
+	.to(track, {
+		x: () => {
+			return ((track.offsetWidth * 0.5) - lastItemWidth()) * -1
+		},
+		ease: 'none' // important!
+	})
+
+const st = ScrollTrigger.create({
+	animation: tl,
+	scrub: 0
+})
 
 const getDraggableWidth = () => {
-	return ((track.offsetWidth * 0.5) - lastItemWidth())
+	return (track.offsetWidth * 0.5) - lastItemWidth()
 }
+
+const getUseableHeight = () => document.documentElement.offsetHeight - window.innerHeight
 
 const updatePosition = () => {
 	const left = track.getBoundingClientRect().left * -1
@@ -22,20 +38,6 @@ const updatePosition = () => {
 	st.scroll(y)
 }
 
-/* Create the timeline to move the track */
-const tl = gsap.timeline()
-	.to(track, {
-		x: () => getDraggableWidth() * -1,
-		ease: 'none' // remove easing - very important!
-	})
-
-/* Create the ScrollTrigger instance */
-const st = ScrollTrigger.create({
-	animation: tl,
-	scrub: 0, // sync timeline to scroll position
-})
-
-/* Create the Draggable instance */
 const draggableInstance = Draggable.create(track, {
 	type: 'x',
 	inertia: true,
@@ -50,13 +52,23 @@ const draggableInstance = Draggable.create(track, {
 	onThrowUpdate: updatePosition
 })
 
-/* Allow navigation via keyboard */
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
+}
+
 track.addEventListener('keyup', (e) => {
 	const id = e.target.getAttribute('href')
+	
+	/* Return if no section href or the user isn’t using the tab key */
 	if (!id || e.key !== 'Tab') return
 	
 	const section = document.querySelector(id)
+	
+	/* Get the scroll position of the section */
 	const y = section.getBoundingClientRect().top + window.scrollY
 	
+	/* Use the ScrollTrigger to scroll the window */
 	st.scroll(y)
 })

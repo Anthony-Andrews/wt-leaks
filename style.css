@@ -1,0 +1,21 @@
+section {
+	--h: calc(var(--i) * 30);
+	
+	min-height: 100vh;
+	background-color: hsl(var(--h, 0) 75% 50%);
+}
+html, body {
+  height: 100%;
+  margin: 0;
+}
+.wrapper {
+  min-height: 100%;
+
+  /* Equal to height of footer */
+  /* But also accounting for potential margin-bottom of last child */
+  margin-bottom: -50px;
+}
+.footer,
+.push {
+  height: 50px;
+}
